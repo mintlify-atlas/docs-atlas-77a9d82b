@@ -1,0 +1,108 @@
+---
+title: "Install Deeztracker: prebuilt release or build from source"
+description: "Download a prebuilt release or build Deeztracker from source on Windows or Linux. Covers system requirements and step-by-step installation."
+---
+
+This page explains how to get Deeztracker running on your machine. You can either download a prebuilt installer from the releases page or compile the app yourself from source. Both paths are covered below.
+
+## Supported platforms
+
+Deeztracker runs on Windows and Linux. macOS is not officially supported.
+
+## Download a release
+
+The fastest way to install Deeztracker is to grab a prebuilt installer from the [GitHub releases page](https://github.com/xScherpschutter/Deeztracker/releases).
+
+<Steps>
+  <Step title="Open the releases page">
+    Go to the [Deeztracker releases](https://github.com/xScherpschutter/Deeztracker/releases) on GitHub and find the latest version.
+  </Step>
+  <Step title="Download the installer for your platform">
+    <Tabs>
+      <Tab title="Windows">
+        Download the `.msi` or `.exe` installer from the release assets.
+      </Tab>
+      <Tab title="Linux">
+        Download the `.deb`, `.rpm`, or `.AppImage` package that matches your distribution.
+      </Tab>
+    </Tabs>
+  </Step>
+  <Step title="Run the installer">
+    <Tabs>
+      <Tab title="Windows">
+        Double-click the downloaded installer and follow the setup wizard. Windows may show a SmartScreen prompt — click **More info** then **Run anyway** to proceed.
+      </Tab>
+      <Tab title="Linux">
+        Install the package using your package manager, or make the AppImage executable and run it directly:
+
+        ```bash
+        chmod +x Deeztracker_*.AppImage
+        ./Deeztracker_*.AppImage
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+  <Step title="Launch Deeztracker">
+    Open Deeztracker from your applications menu or desktop shortcut. The login screen appears on first launch.
+  </Step>
+</Steps>
+
+## Build from source
+
+If you prefer to compile Deeztracker yourself, you need Node.js, pnpm, and the Rust toolchain installed first.
+
+<Note>
+  **Prerequisites before building:**
+  - [Node.js](https://nodejs.org/) v18 or later
+  - [pnpm](https://pnpm.io/installation) (the project uses pnpm as its package manager)
+  - [Rust toolchain](https://rustup.rs/) (stable channel, installed via `rustup`)
+  
+  On Linux you also need the Tauri system dependencies for your distribution. See the [Tauri prerequisites guide](https://v2.tauri.app/start/prerequisites/) for the full list of packages.
+</Note>
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/xScherpschutter/Deeztracker.git
+    cd Deeztracker
+    ```
+  </Step>
+  <Step title="Install dependencies">
+    ```bash
+    pnpm install
+    ```
+  </Step>
+  <Step title="Build the application">
+    ```bash
+    pnpm tauri build
+    ```
+
+    The build compiles the Rust backend and bundles the Vue 3 frontend. This takes a few minutes on first run while Cargo fetches and compiles dependencies.
+  </Step>
+  <Step title="Find the installer">
+    <Tabs>
+      <Tab title="Windows">
+        The installer is generated at `src-tauri/target/release/bundle/msi/` or `src-tauri/target/release/bundle/nsis/`.
+      </Tab>
+      <Tab title="Linux">
+        Packages are generated at `src-tauri/target/release/bundle/` in subdirectories for each format (`.deb`, `.rpm`, `.appimage`).
+      </Tab>
+    </Tabs>
+
+    Run the installer to complete the installation.
+  </Step>
+</Steps>
+
+## Run in development mode
+
+To run Deeztracker without installing it — useful for testing changes — use the dev command instead of building:
+
+```bash
+pnpm tauri dev
+```
+
+This starts the Vite dev server and opens the app window with hot module replacement enabled.
+
+## Next steps
+
+Once Deeztracker is installed, connect your Deezer account to start listening. See the [quickstart guide](/quickstart) for how to enter your ARL token and play your first track.

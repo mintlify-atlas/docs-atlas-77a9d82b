@@ -1,0 +1,46 @@
+---
+title: "Audio quality settings: MP3 128, MP3 320, and FLAC"
+description: "Deeztracker supports three quality tiers — MP3 128, MP3 320, and lossless FLAC — with higher tiers requiring a Deezer Premium or HiFi subscription."
+---
+
+Deeztracker lets you choose how audio is delivered for both streaming and downloads. Three quality tiers are available, ranging from standard MP3 up to lossless FLAC. The tier you select applies globally: it affects every track you stream and every file Deeztracker downloads to your machine.
+
+## Quality tiers
+
+| Setting | Bitrate | Format | Account required |
+|---|---|---|---|
+| Basic | 128 kbps | MP3 | Free or Premium |
+| High | 320 kbps | MP3 | Premium / HiFi |
+| Lossless | Lossless | FLAC | Premium / HiFi |
+
+**Basic (MP3_128)** is the default quality and works with any Deezer account, including free. It uses the `.mp3` container at 128 kbps.
+
+**High (MP3_320)** delivers near-CD quality at 320 kbps, still in the `.mp3` container. It requires an active Deezer Premium or HiFi subscription.
+
+**Lossless (FLAC)** preserves the full audio signal without any lossy compression and saves files with a `.flac` extension. It requires Deezer Premium or HiFi. This is the highest quality Deezer provides.
+
+When you select FLAC or MP3 320 but your account does not have the required subscription, Deeztracker automatically falls back to the next available quality rather than failing. The fallback order is FLAC → MP3 320 → MP3 128.
+
+## Change audio quality
+
+<Steps>
+  <Step title="Open Settings">
+    Click the **Settings** icon in the top bar, or press the settings button in the app navigation.
+  </Step>
+
+  <Step title="Go to the Audio section">
+    In the Settings panel, find the **Audio** section.
+  </Step>
+
+  <Step title="Select a quality tier">
+    Use the **Audio Quality** control to choose **Basic (128 kbps)**, **High (320 kbps)**, or **Lossless (FLAC)**. The change takes effect immediately for subsequent tracks.
+  </Step>
+</Steps>
+
+<Note>
+The selected quality applies to both streaming and downloads. If you download a track at FLAC quality, it is saved as a `.flac` file. If you later change to MP3 320, subsequent downloads save as `.mp3` files at 320 kbps.
+</Note>
+
+<Tip>
+If you are on a slow or metered connection, use **Basic (128 kbps)** to reduce bandwidth usage. FLAC files can be several times larger than MP3 128 equivalents — typically 20–40 MB per track vs. 4–6 MB — so FLAC streaming requires a stable, fast connection to avoid buffering.
+</Tip>

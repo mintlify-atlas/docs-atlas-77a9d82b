@@ -1,0 +1,73 @@
+---
+title: "Authenticate Deeztracker with your Deezer ARL token"
+description: "The ARL token is a Deezer session cookie that authenticates Deeztracker with your account, enabling streaming, downloads, and library access."
+---
+
+Deeztracker connects to Deezer using your ARL token — a session cookie that acts as a persistent login credential. When you enter your ARL token in Deeztracker, the app authenticates with Deezer's API so you can stream tracks, access your library, and download files. Without a valid ARL token, Deeztracker cannot reach Deezer's servers.
+
+<Warning>
+Your ARL token gives full access to your Deezer account. Treat it like a password: never share it publicly, and do not commit it to version control or paste it into chat messages.
+</Warning>
+
+## Find your ARL token
+
+Your ARL token is stored as a cookie in your browser after you log in to Deezer. You can copy it from your browser's developer tools.
+
+<Steps>
+  <Step title="Log in to Deezer in your browser">
+    Go to [deezer.com](https://www.deezer.com) and sign in to your account.
+  </Step>
+
+  <Step title="Open developer tools">
+    Press `F12` or `Ctrl+Shift+I` (Windows/Linux) to open the browser developer tools panel.
+  </Step>
+
+  <Step title="Navigate to the cookies section">
+    <Tabs>
+      <Tab title="Chrome / Edge">
+        Click the **Application** tab. In the left sidebar, expand **Storage → Cookies**, then click `https://www.deezer.com`.
+      </Tab>
+      <Tab title="Firefox">
+        Click the **Storage** tab. In the left sidebar, expand **Cookies**, then click `https://www.deezer.com`.
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Copy the ARL value">
+    Find the cookie named `arl` in the list. Click on it to select it, then copy the entire value from the **Value** column. The value is a long string of letters and numbers.
+  </Step>
+</Steps>
+
+## Enter your ARL token in Deeztracker
+
+<Steps>
+  <Step title="Open Deeztracker">
+    Launch Deeztracker. If you have not authenticated before, the login screen appears automatically.
+  </Step>
+
+  <Step title="Paste your ARL token">
+    Click the **ARL Token** field and paste the value you copied from your browser.
+  </Step>
+
+  <Step title="Authenticate">
+    Click **Authenticate**. Deeztracker sends the token to Deezer's API to verify it. On success, you land on the home screen.
+  </Step>
+</Steps>
+
+Deeztracker saves your ARL token locally so you stay logged in across restarts. To log out and remove the saved token, open **Settings → Account** and click **Log out**.
+
+## Premium vs. free accounts
+
+The audio quality tiers you can access depend on your Deezer subscription:
+
+| Quality | Bitrate | Requires |
+|---|---|---|
+| Basic (MP3_128) | 128 kbps | Free account |
+| High (MP3_320) | 320 kbps | Premium / HiFi |
+| Lossless (FLAC) | Lossless | Premium / HiFi |
+
+If your account is free, Deeztracker automatically falls back to MP3 128 kbps even if you select a higher quality in settings. See [Audio quality](/configuration/audio-quality) for details on changing your quality preference.
+
+<Note>
+If you lose internet access after authenticating, Deeztracker enters offline mode automatically. In offline mode, only previously downloaded tracks are available for playback. You do not need to re-enter your ARL token when you come back online — Deeztracker reconnects and re-authenticates using the saved token.
+</Note>

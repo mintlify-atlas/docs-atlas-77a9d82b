@@ -1,0 +1,58 @@
+---
+title: "Manage your local music library in Deeztracker"
+description: "Heart tracks as favorites, build custom playlists, and browse downloaded files — all stored in a local SQLite database at your app data directory."
+---
+
+The Library section gives you persistent, local control over your music. Favorites, custom playlists, and downloaded tracks are all stored in a SQLite database at `<app data dir>/library.db`. Because the data lives on your machine, your library remains available even when you are not connected to Deezer.
+
+<CardGroup cols={3}>
+  <Card title="Favorites" icon="heart">
+    Heart any track to add it to your Favorites list. Heart it again to remove it. Favorites are stored with their full metadata so they display correctly offline.
+  </Card>
+  <Card title="Playlists" icon="list-music">
+    Create named playlists, add tracks from anywhere in the app, reorder or remove tracks, and delete playlists you no longer need.
+  </Card>
+  <Card title="Downloads" icon="download">
+    Every track you download is recorded here with its local file path and quality. Deeztracker checks file integrity each time you open this tab.
+  </Card>
+</CardGroup>
+
+## Favorites
+
+To add a track to your favorites, click the heart icon on any track row or in the player bar. Deeztracker calls `toggle_favorite`: if the track is already in the `favorites` table it is removed, otherwise it is inserted with its full metadata JSON and the current timestamp.
+
+To retrieve your favorites, the app calls `get_favorites`, which returns all favorited tracks sorted by the date they were added, most recent first. You can also check whether a specific track is favorited using `is_favorite` — the player bar uses this to show the heart as filled or empty.
+
+## Custom playlists
+
+You can create as many local playlists as you like. Each playlist has a name and an optional description.
+
+| Action | Command |
+|---|---|
+| Create a playlist | `create_playlist` |
+| Delete a playlist | `delete_playlist` |
+| List all playlists | `get_playlists` |
+| Add a track | `add_track_to_playlist` |
+| Remove a track | `remove_track_from_playlist` |
+| List playlist tracks | `get_playlist_tracks` |
+
+Playlists are displayed with a mosaic of up to four album cover thumbnails taken from the first tracks in the playlist. Tracks in a playlist are stored with their full metadata, so they render correctly without a network call.
+
+To add a track to a playlist, open the context menu on any track and choose **Add to playlist**. A modal lets you pick from your existing playlists or create a new one inline.
+
+## Downloads
+
+The Downloads tab shows every track you have saved to disk, sorted by download date with the most recent at the top. Each entry records:
+
+- The track's Deezer ID
+- The absolute local file path
+- The quality it was saved at (`MP3_128`, `MP3_320`, or `FLAC`)
+- Full track metadata as JSON
+
+When you open the Downloads tab, Deeztracker calls `check_downloads_integrity`. It reads every entry from the `downloads` table and checks that the file still exists at the recorded path. Any entry whose file is missing is automatically deleted from the database, keeping the list accurate if you move or delete files outside the app.
+
+You can remove a download record manually (without deleting the file) using `remove_download_record`.
+
+<Tip>
+If Deeztracker loses its connection to Deezer, it automatically switches to offline mode. In offline mode the app redirects all navigation to the Library section so you can still access your downloaded tracks, favorites, and playlists. Streaming is unavailable until the connection is restored.
+</Tip>

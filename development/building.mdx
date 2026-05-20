@@ -1,0 +1,96 @@
+---
+title: "Build Deeztracker for production: installers and bundles"
+description: "Compile and bundle Deeztracker into platform-native installers for Windows (.msi, .exe) and Linux (.deb, .AppImage) using pnpm tauri build."
+---
+
+A production build compiles the Rust backend with optimizations, bundles the Vite frontend output, and packages everything into a native installer for the current platform. The resulting binaries are self-contained — users do not need Node.js, Rust, or any development tools installed.
+
+## Build steps
+
+<Steps>
+  <Step title="Verify prerequisites">
+    Make sure your development environment is fully configured before building. You need Node.js, pnpm, and the Rust toolchain installed, along with the platform system libraries that Tauri requires.
+
+    If you have not done this yet, follow the [development setup guide](/development/setup) first.
+  </Step>
+  <Step title="Install dependencies">
+    ```bash
+    pnpm install
+    ```
+
+    Ensure your JavaScript dependencies are up to date before building.
+  </Step>
+  <Step title="Run the production build">
+    ```bash
+    pnpm tauri build
+    ```
+
+    This command runs two stages in sequence:
+
+    1. **`pnpm build`** — runs `vue-tsc --noEmit` to type-check the TypeScript source, then Vite bundles the frontend into `dist/`
+    2. **Tauri build** — compiles the Rust backend in release mode and packages the frontend and binary into platform-native installers
+  </Step>
+</Steps>
+
+<Note>
+  The first production build downloads and compiles all Rust dependencies from scratch. Expect this to take 10–20 minutes on a typical machine. Subsequent builds reuse the Cargo cache in `src-tauri/target/` and finish much faster.
+</Note>
+
+## Build output
+
+Installers are written to `src-tauri/target/release/bundle/`. The exact subdirectories and file formats depend on the platform you build on:
+
+<Tabs>
+  <Tab title="Windows">
+    | Format | Location |
+    |---|---|
+    | MSI installer | `bundle/msi/Deeztracker_0.1.8_x64_en-US.msi` |
+    | NSIS installer (.exe) | `bundle/nsis/Deeztracker_0.1.8_x64-setup.exe` |
+
+    The MSI is suitable for managed deployments. The NSIS `.exe` is the standard Windows installer for direct distribution.
+  </Tab>
+  <Tab title="Linux">
+    | Format | Location |
+    |---|---|
+    | Debian package | `bundle/deb/deeztracker_0.1.8_amd64.deb` |
+    | AppImage | `bundle/appimage/Deeztracker_0.1.8_amd64.AppImage` |
+
+    The `.deb` package installs through `apt` on Debian/Ubuntu systems. The AppImage is a portable single-file executable that runs on most Linux distributions without installation.
+  </Tab>
+</Tabs>
+
+The app version (`0.1.8`) comes from the `version` field in `src-tauri/tauri.conf.json`. Update that field before building a new release.
+
+## Bundle configuration
+
+The bundle settings in `src-tauri/tauri.conf.json` control what installers are produced:
+
+```json
+"bundle": {
+  "active": true,
+  "targets": "all",
+  "icon": [
+    "icons/32x32.png",
+    "icons/128x128.png",
+    "icons/128x128@2x.png",
+    "icons/icon.icns",
+    "icons/icon.ico"
+  ]
+}
+```
+
+`"targets": "all"` instructs Tauri to produce every supported installer format for the current platform. To build only a specific format, replace `"all"` with a format name such as `"msi"`, `"nsis"`, `"deb"`, or `"appimage"`.
+
+<Tip>
+  Tauri does not support cross-compilation between Windows and Linux. To produce a Windows installer you must run the build on a Windows machine (or a Windows CI runner), and likewise for Linux. If you need both platforms, use separate CI jobs for each target.
+</Tip>
+
+## TypeScript type checking
+
+The `build` script in `package.json` runs `vue-tsc --noEmit` before Vite bundles the frontend:
+
+```json
+"build": "vue-tsc --noEmit && vite build"
+```
+
+If the type check finds errors, the build stops before any files are written. Fix all TypeScript errors before running `pnpm tauri build`.

@@ -1,0 +1,77 @@
+---
+title: "Download tracks, albums, and playlists offline"
+description: "Save individual tracks, full albums, or entire playlists to your local audio directory and play them back instantly without an internet connection."
+---
+
+Deeztracker lets you download any track, album, or playlist from Deezer and store it on disk for offline listening. Downloaded files are saved to your system's audio directory under a `Deeztracker` subfolder, tagged with full metadata, and automatically used instead of streaming whenever you play that track.
+
+## What you can download
+
+- **Individual tracks** — download a single track from the player bar, track list, or context menu.
+- **Full albums** — download every track in an album at once. Files are saved to an `Artist - Album` subfolder.
+- **Playlists** — download every track in a Deezer playlist. Files are saved to a `Playlist - Name` subfolder.
+
+## Download workflow
+
+<Steps>
+  <Step title="Trigger a download">
+    Click the download button next to any track, album, or playlist. This calls `download_track_node`, `download_album_node`, or `download_playlist_node` on the backend.
+  </Step>
+  <Step title="Backend prepares the output folder">
+    For single tracks, files land directly in `<audio dir>/Deeztracker/`. For albums, the backend creates a subfolder named `Artist - Album Title`. For playlists, it creates a subfolder named `Playlist - Playlist Title`. Any characters that are invalid in file names (`/ \ : * ? " < > |`) are replaced with underscores.
+
+    Each track file is saved as `Artist - Track Title.mp3` (or `.flac` for FLAC quality).
+  </Step>
+  <Step title="Track download runs">
+    Up to four tracks download in parallel (controlled by a semaphore). Each track is fetched from Deezer's CDN, decrypted using the Blowfish key derived from the track ID, and written to disk at the configured quality level.
+  </Step>
+  <Step title="Metadata is embedded">
+    After writing the audio file, Deeztracker uses the [lofty](https://github.com/Serial-ATA/lofty-rs) crate to embed ID3/Vorbis tags: title, artist, album, album artist, track number, disc number, release year, genre, ISRC, and cover art.
+  </Step>
+  <Step title="Library record is written">
+    The track's local path, quality, and full metadata JSON are inserted into the SQLite library database. Deeztracker now knows the file exists locally.
+  </Step>
+  <Step title="Track plays from disk">
+    The next time you play the track, `audio_play_native` finds the local path in the database and opens the file directly — no network request needed.
+  </Step>
+</Steps>
+
+## Progress events
+
+The backend emits two Tauri events during downloads that the frontend uses to update the UI:
+
+### `download-progress`
+
+Emitted for each individual track as its status changes.
+
+```typescript
+interface DownloadProgress {
+  track_id: string;
+  status: 'pending' | 'downloading' | 'completed' | 'error';
+  error?: string;
+}
+```
+
+### `batch-progress`
+
+Emitted after each track finishes when downloading an album or playlist.
+
+```typescript
+interface BatchProgress {
+  total: number;
+  current: number;
+  failed: number;
+}
+```
+
+## Cancelling downloads
+
+Click the **Cancel downloads** button in the player bar while a batch is in progress. This signals the cancellation token shared across all active download tasks, causing them to stop before fetching the next track.
+
+## Viewing downloaded tracks
+
+Open the **Library** tab and select **Downloads** to see all tracks you have saved locally, sorted by download date. Deeztracker also runs an integrity check (`check_downloads_integrity`) when you open the Downloads tab: any entry whose file no longer exists on disk is automatically removed from the database.
+
+<Note>
+Download quality matches your current audio quality setting (Basic 128 kbps, High 320 kbps, or Lossless FLAC). If your preferred quality is unavailable for a track, Deeztracker falls back to the next lower quality automatically. FLAC and 320 kbps downloads require a Deezer Premium or HiFi account.
+</Note>

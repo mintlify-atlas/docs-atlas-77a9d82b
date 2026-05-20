@@ -1,0 +1,128 @@
+---
+title: "Deeztracker architecture: Rust backend and Vue frontend"
+description: "How Deeztracker's Tauri two-process model connects the Rust audio/download backend to the Vue 3 frontend via typed IPC commands and events."
+---
+
+Deeztracker is built on [Tauri v2](https://v2.tauri.app/), which runs the application as two cooperating processes: a native Rust backend and a web-based frontend rendered in a system WebView. The Rust process owns all privileged operations — network requests to Deezer, audio decoding, file I/O, and SQLite persistence — while the Vue 3 frontend handles all user interaction and state display. The two sides communicate exclusively through Tauri's IPC bridge.
+
+<Note>
+  The frontend cannot call Deezer APIs or access the filesystem directly. Every privileged action goes through a typed `invoke()` call to a registered Tauri command, which runs in the Rust process and returns a serialized result.
+</Note>
+
+## Backend: `src-tauri/src/`
+
+The Rust backend is organized into focused modules, each responsible for one domain.
+
+### `rusteer.rs` — Deezer interface
+
+`Rusteer` is the central struct that coordinates all Deezer operations. It holds two API clients (`DeezerApi` and `GatewayApi`) and exposes high-level async methods consumed by the Tauri commands in `lib.rs`:
+
+- **Streaming** — `stream_track()` fetches an encrypted audio stream, decrypts it on the fly using a `SharedBuffer`, and returns an async reader that `audio_player.rs` consumes
+- **Downloading** — `download_track_to()` fetches, decrypts, and writes audio files to disk, then calls `tagging.rs` to embed metadata
+- **Search and metadata** — `search_tracks()`, `search_albums()`, `search_artists()`, `search_playlists()`, `get_track()`, `get_album()`, `get_artist()`, `get_playlist()`
+- **Smart Radio** — `get_track_radio()` seeds playback from the primary artist's radio or mixes top tracks from related artists
+- **Quality selection** — `DownloadQuality` enum (`Flac`, `Mp3_320`, `Mp3_128`) with automatic fallback when a quality tier is unavailable
+- **Concurrency** — a `Semaphore` limits parallel downloads to four at a time; a `CancellationToken` lets the user abort all in-flight downloads
+
+### `audio_player.rs` — native audio engine
+
+The audio engine uses [rodio](https://github.com/RustAudio/rodio) running in a dedicated OS thread, keeping audio output completely independent of the async Tokio runtime. Commands are dispatched to the thread through a synchronous `mpsc` channel:
+
+```rust
+pub enum AudioCommand {
+    Play(Box<dyn ReadAndSeek + Send + Sync>, f64, String),
+    Seek(f64),
+    Pause,
+    Resume,
+    Stop,
+    SetVolume(f32),
+}
+```
+
+The thread polls the channel every 200 ms. Between commands it tracks playback position and emits `playback_progress_native` and `playback_ended_native` events back to the frontend via the Tauri `AppHandle`. When a track plays, the audio player checks the local downloads database first; if a local file exists it reads from disk, otherwise it wraps the async `SharedBuffer` stream in a `SyncStreamReader` adaptor for rodio.
+
+Exposed Tauri commands: `audio_play_native`, `audio_preload_native`, `audio_pause_native`, `audio_resume_native`, `audio_stop_native`, `audio_set_volume_native`, `audio_get_state`.
+
+### `api/` — Deezer API clients
+
+Two clients handle different parts of the Deezer API surface:
+
+- **`DeezerApi`** (`public.rs`) — unauthenticated public REST API: track/album/artist/playlist metadata, search, charts, artist radio
+- **`GatewayApi`** (`gateway.rs`) — authenticated gateway API using your ARL cookie: song data, track tokens, and media URL resolution for streaming and downloading
+- **`lyrics.rs`** — fetches synced or unsynced lyrics via the gateway
+
+### `crypto/` — track decryption
+
+Deezer encrypts audio streams using a two-step scheme: Blowfish CBC decrypts every third 2048-byte block, then AES-128-CTR decrypts the result. The `crypto/` module implements both algorithms using the `blowfish`, `aes`, and `ctr` crates. The Blowfish key is derived from the track ID using an MD5-based key derivation step.
+
+### `database.rs` — local persistence
+
+All local state is stored in a single SQLite database (`library.db` inside the Tauri app data directory), managed via [rusqlite](https://github.com/rusqlite/rusqlite) with the bundled SQLite feature. Three tables persist data across sessions:
+
+| Table | Contents |
+|---|---|
+| `favorites` | Favorited tracks with full JSON metadata |
+| `playlists` / `playlist_tracks` | User-created playlists and their track lists |
+| `downloads` | Downloaded tracks with local file path and quality |
+
+The database module exposes its operations directly as Tauri commands (`toggle_favorite`, `get_favorites`, `create_playlist`, `get_downloads`, etc.).
+
+### `tagging.rs` — audio metadata
+
+After a file is downloaded and decrypted, `tagging.rs` embeds ID3/Vorbis tags using [lofty](https://github.com/Serial-ATA/lofty-rs). It writes title, artist, album, track number, disc number, release year, ISRC, genre, and album art fetched from Deezer's CDN.
+
+### `models/` — data types
+
+Shared Rust structs for `Track`, `Album`, `Artist`, and `Playlist` are defined here. All models derive `serde::Serialize` and `serde::Deserialize` so they can cross the IPC boundary as JSON.
+
+### Media controls
+
+[souvlaki](https://github.com/Sinono3/souvlaki) integrates with the OS media control layer — MPRIS on Linux and the System Media Transport Controls on Windows. When playback state changes, the frontend calls `update_media_metadata` and `update_playback_state` commands. Incoming hardware key events (play, pause, next, previous) are forwarded to the frontend as Tauri events (`media-play`, `media-pause`, `media-toggle`, `media-next`, `media-prev`).
+
+---
+
+## Frontend: `src/`
+
+The Vue 3 frontend is written in TypeScript and built with Vite. It is organized around features, each owning its own views, components, and Pinia stores.
+
+### Feature modules (`src/features/`)
+
+| Feature | Responsibility |
+|---|---|
+| `auth/` | ARL token entry and login flow |
+| `dashboard/` | Home screen with charts and recent content |
+| `library/` | Favorites, user playlists, and downloaded tracks |
+| `playback/` | Player bar, queue management, and progress tracking |
+| `search/` | Full-text search across tracks, albums, artists, and playlists |
+
+### State management
+
+[Pinia](https://pinia.vuejs.org/) stores hold all shared application state. Each feature owns its own store, keeping state close to the code that uses it.
+
+### Routing
+
+Vue Router manages client-side navigation. Routes that require authentication redirect to the `auth` feature if no ARL token is present. An offline mode redirect is also wired into the router guard, redirecting to the `library` feature when the app detects no network.
+
+### Styling
+
+[Tailwind CSS](https://tailwindcss.com/) is used for all styling. The Vite dev server runs with Tailwind's JIT compiler so class changes appear immediately during development.
+
+### Internationalization
+
+[vue-i18n](https://vue-i18n.intlify.dev/) provides English (`en`) and Spanish (`es`) locale files stored under `src/locales/`. Language strings are used throughout all feature views and the system tray menu.
+
+### Tauri IPC
+
+The frontend calls the Rust backend using `invoke()` from `@tauri-apps/api`:
+
+```typescript
+import { invoke } from '@tauri-apps/api/core';
+
+const tracks = await invoke<Track[]>('search_tracks', {
+  query: 'search term',
+  limit: 20,
+  index: 0,
+});
+```
+
+Push events from Rust (such as `playback_progress_native` and `download-progress`) are received with `listen()` from `@tauri-apps/api/event`.

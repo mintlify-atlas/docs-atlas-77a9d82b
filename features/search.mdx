@@ -1,0 +1,48 @@
+---
+title: "Search Deezer for tracks, albums, artists, and playlists"
+description: "Find tracks, albums, artists, and playlists across the entire Deezer catalog, then browse artist pages, album track listings, and trending charts."
+---
+
+The Search view lets you find any content on Deezer — tracks, albums, artists, and playlists — without leaving the app. Type into the search bar and Deeztracker queries the Deezer public API in real time, returning results grouped by type. A filter bar at the top lets you narrow results to a single category and load more via infinite scroll.
+
+## Search result types
+
+<CardGroup cols={2}>
+  <Card title="Tracks" icon="music">
+    Search results include the track title, artist, album art, and duration. Click a track to play it immediately, or right-click for context menu options like adding to the queue, downloading, or adding to a playlist.
+  </Card>
+  <Card title="Albums" icon="disc">
+    Album cards show the cover, title, artist names, and album type. Click an album to open the album detail view with the full track listing.
+  </Card>
+  <Card title="Artists" icon="user">
+    Artist cards display the artist photo and name. Click an artist to open the artist detail view with their top tracks and discography.
+  </Card>
+  <Card title="Playlists" icon="list">
+    Playlist cards show the cover, title, and creator name. Click a playlist to open it and browse or play its tracks.
+  </Card>
+</CardGroup>
+
+## Filtering and loading more
+
+The filter bar above the results lets you switch between **All**, **Tracks**, **Albums**, **Artists**, and **Playlists**. When you select a specific type, the results panel shows only that category and enables infinite scroll: as you approach the bottom of the list, the store calls `search_tracks`, `search_albums`, `search_artists`, or `search_playlists` with an incremented `index` offset to load the next page of results.
+
+## Artist detail
+
+Clicking an artist opens a dedicated artist detail view, which calls two commands in parallel:
+
+- `get_artist_top_tracks` — returns the artist's most-played tracks on Deezer.
+- `get_artist_albums` — returns the artist's full discography.
+
+From this view you can play any track directly, open an album, or start a Smart Radio session seeded from that artist.
+
+## Album detail
+
+Clicking an album calls `get_album` and displays the full track listing with track number, title, and duration. You can play individual tracks, add the entire album to the queue, or download the full album in one click.
+
+## Playlist detail
+
+Clicking a Deezer playlist calls `get_playlist` and lists all its tracks. You can play the playlist, add it to the queue, or download all tracks for offline listening.
+
+## Trending charts
+
+When you open the Home (Dashboard) view without performing a search, Deeztracker calls `get_charts`, which returns the current Deezer top charts across all four content types: top tracks, top albums, top artists, and top playlists. These are displayed as horizontal scrolling rows so you can quickly discover what is popular right now.

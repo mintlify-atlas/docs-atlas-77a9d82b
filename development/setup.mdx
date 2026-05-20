@@ -1,0 +1,96 @@
+---
+title: "Set up Deeztracker for local development on Windows or Linux"
+description: "Install Node.js, pnpm, and the Rust toolchain, then clone the repo and run pnpm tauri dev to launch Deeztracker in development mode."
+---
+
+To run Deeztracker from source you need a JavaScript runtime, a Rust toolchain, and a set of platform system libraries that Tauri depends on. Once those are in place, a single command launches both the Vite dev server and the native application window.
+
+## Prerequisites
+
+<Tabs>
+  <Tab title="Windows">
+    Install the following tools before proceeding:
+
+    - **Node.js** — use the [current LTS release](https://nodejs.org/en/download)
+    - **pnpm** — install globally after Node.js:
+      ```bash
+      npm install -g pnpm
+      ```
+    - **Rust toolchain** — install via [rustup](https://rustup.rs/):
+      ```bash
+      winget install Rustlang.Rustup
+      rustup default stable
+      ```
+    - **Microsoft C++ Build Tools** — required by the Rust compiler on Windows. Install the **Desktop development with C++** workload from [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/).
+    - **WebView2** — required by Tauri. It ships by default on Windows 10 (version 1803+) and Windows 11.
+
+    For the full list of Windows prerequisites, see the [Tauri prerequisites guide](https://v2.tauri.app/start/prerequisites/).
+  </Tab>
+  <Tab title="Linux">
+    Install the following tools before proceeding:
+
+    - **Node.js** — use the [current LTS release](https://nodejs.org/en/download)
+    - **pnpm** — install globally after Node.js:
+      ```bash
+      npm install -g pnpm
+      ```
+    - **Rust toolchain** — install via [rustup](https://rustup.rs/):
+      ```bash
+      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+      rustup default stable
+      ```
+    - **System libraries** — Tauri requires several native libraries. On Debian/Ubuntu:
+      ```bash
+      sudo apt update
+      sudo apt install libwebkit2gtk-4.1-dev \
+        build-essential \
+        curl \
+        wget \
+        file \
+        libxdo-dev \
+        libssl-dev \
+        libayatana-appindicator3-dev \
+        librsvg2-dev
+      ```
+
+    For other distributions, see the [Tauri prerequisites guide](https://v2.tauri.app/start/prerequisites/).
+  </Tab>
+</Tabs>
+
+## Set up and run
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/xScherpschutter/Deeztracker.git
+    cd Deeztracker
+    ```
+  </Step>
+  <Step title="Install JavaScript dependencies">
+    ```bash
+    pnpm install
+    ```
+
+    This installs all frontend dependencies including Vue 3, Pinia, Vue Router, Tailwind CSS, and the Tauri API bindings.
+  </Step>
+  <Step title="Start the development server">
+    ```bash
+    pnpm tauri dev
+    ```
+
+    This command runs `pnpm dev` in the background to start the Vite dev server on port 1420, then launches the Tauri application window pointed at that dev URL. The frontend supports hot-module replacement — UI changes appear immediately without restarting the process.
+  </Step>
+</Steps>
+
+<Note>
+  The first run compiles the entire Rust backend from scratch, which can take several minutes depending on your machine. Subsequent builds are significantly faster because Cargo caches compiled artifacts in `src-tauri/target/`.
+</Note>
+
+## What runs during development
+
+When you run `pnpm tauri dev`, two processes start together:
+
+- **Vite dev server** (`http://localhost:1420`) — serves the Vue 3 frontend with hot-module replacement
+- **Tauri process** — compiles and launches the native window, which loads the frontend from the Vite URL
+
+Changes to files inside `src/` are reflected instantly in the running window. Changes to files inside `src-tauri/src/` trigger a Rust recompile and restart of the Tauri process.

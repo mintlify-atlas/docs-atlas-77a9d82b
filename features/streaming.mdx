@@ -1,0 +1,59 @@
+---
+title: "Streaming music with Deeztracker's native audio engine"
+description: "Play Deezer tracks instantly through a native audio engine with OS media controls, system tray integration, volume control, and lyrics display."
+---
+
+Deeztracker's native audio engine streams Deezer tracks directly using [rodio](https://github.com/RustAudio/rodio), a cross-platform audio library for Rust. Every track you play is decrypted in memory and fed into a dedicated audio thread, giving you low-latency playback without requiring third-party media runtimes. OS media control integration via [souvlaki](https://github.com/Sinono3/souvlaki) means your keyboard media keys and lock-screen controls work out of the box on both Linux and Windows.
+
+## How playback works
+
+When you start a track, Deeztracker checks your local library first. If the track has already been downloaded, the audio player opens the file directly from disk — this is the fast path in `audio_play_native`. If no local file exists, the backend calls `stream_track`, which fetches and decrypts the Deezer media stream in a shared memory buffer and passes it to rodio for playback.
+
+The audio thread runs independently of the UI. It listens on an internal channel for commands (play, pause, resume, stop, seek, set volume) and reports position back to the frontend by emitting Tauri events every 200 ms.
+
+### Playback events
+
+The backend emits the following events that the frontend subscribes to:
+
+| Event | Payload | When emitted |
+|---|---|---|
+| `playback_progress_native` | `number` (seconds) | Every ~200 ms during playback and on seek |
+| `playback_ended_native` | `null` | When the sink empties at end of track |
+| `media-play` | `null` | OS media key: Play |
+| `media-pause` | `null` | OS media key: Pause |
+| `media-toggle` | `null` | OS media key or tray: Toggle play/pause |
+| `media-next` | `null` | OS media key or tray: Next track |
+| `media-prev` | `null` | OS media key or tray: Previous track |
+
+## OS media controls
+
+Deeztracker registers itself with the operating system's media session API using souvlaki. This enables:
+
+- **Linux** — MPRIS D-Bus integration, so any MPRIS-compatible widget (taskbars, lock screens, KDE Connect) can show track info and control playback.
+- **Windows** — Windows media key integration and the Windows system media overlay.
+
+Track metadata (title, artist, album, cover art, duration) is pushed to the OS via `update_media_metadata` whenever a new track starts. Playback state (playing or paused, with current position) is updated via `update_playback_state`.
+
+## System tray controls
+
+Deeztracker keeps a system tray icon active at all times so you can control playback without opening the window. The tray menu provides:
+
+- **Play / Pause** — toggles playback
+- **Next** — advances to the next track in the queue
+- **Previous** — goes back to the previous track
+- **Show Window** — brings the main window to focus
+- **Quit** — exits the application
+
+Clicking the tray icon directly also shows the window. The tray menu labels update when you change your display language in Settings.
+
+## Volume control
+
+You can adjust volume from the player bar. The `audio_set_volume_native` command sends a `SetVolume` message to the audio thread, which applies it immediately to the rodio sink and stores it as the global volume so that subsequent tracks start at the same level.
+
+## Lyrics
+
+While a track is playing, you can open the lyrics panel from the player. Deeztracker calls `get_lyrics` with the current track, fetches the lyrics from an external source, and displays them line by line in sync with playback. If lyrics are unavailable, the panel shows a "Lyrics not available" message.
+
+<Note>
+When Deeztracker is in offline mode (no active login), only tracks you have previously downloaded are available for playback. Streaming requires an active Deezer session.
+</Note>

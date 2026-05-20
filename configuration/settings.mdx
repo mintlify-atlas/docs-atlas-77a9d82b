@@ -1,0 +1,60 @@
+---
+title: "Deeztracker settings: audio, startup, language, and account"
+description: "Configure audio quality, startup behavior, display language, and view your downloads directory from the Deeztracker Settings panel."
+---
+
+The Settings panel lets you control how Deeztracker behaves on your machine. You can adjust audio quality, configure whether the app launches at login, switch the display language, and see where downloaded files are saved. Open Settings by clicking the **Settings** icon in the top bar.
+
+## Available settings
+
+### Audio
+
+| Setting | Description |
+|---|---|
+| **Audio Quality** | Sets the quality tier used for all streaming and downloads. Options are **Basic (128 kbps)**, **High (320 kbps)**, and **Lossless (FLAC)**. Higher tiers require a Deezer Premium or HiFi account. |
+
+See [Audio quality](/configuration/audio-quality) for a full breakdown of each tier and fallback behavior.
+
+### General
+
+| Setting | Description |
+|---|---|
+| **Launch on startup** | When enabled, Deeztracker starts automatically each time your computer boots. Uses the OS autolaunch mechanism on both Windows and Linux. |
+
+To toggle startup behavior, switch the **Launch on startup** control in **Settings → General**. You can enable or disable this at any time without restarting the app.
+
+### Appearance
+
+| Setting | Description |
+|---|---|
+| **Language** | Sets the display language for all UI text. Available options are **English** and **Spanish**. |
+| **Lyrics Mode** | Controls how synchronized lyrics are displayed during playback. Options are **Normal**, **Fade Out**, and **Current Only**. |
+
+### Account
+
+| Setting | Description |
+|---|---|
+| **Account Status** | Shows whether your Deezer account is **Premium / HiFi** or **Free**. Deeztracker checks this when you authenticate. |
+| **Current ARL Token** | Displays a reference to the stored token. |
+| **Log out** | Removes the saved ARL token and returns you to the login screen. |
+
+See [ARL token setup](/configuration/arl-token) for instructions on obtaining and entering your token.
+
+### About
+
+| Setting | Description |
+|---|---|
+| **Version** | Displays the current installed version of Deeztracker. |
+
+## Downloads location
+
+Deeztracker saves all downloaded tracks to a `Deeztracker` subfolder inside your system's default audio directory:
+
+- **Windows:** `%USERPROFILE%\Music\Deeztracker\`
+- **Linux:** `~/Music/Deeztracker/`
+
+Album downloads are organized into subfolders named `Artist - Album Title`. Playlist downloads go into folders named `Playlist - Playlist Title`. The directory is created automatically the first time you download a track.
+
+<Tip>
+To quickly find your downloads folder, open a file manager and navigate to your system's Music directory. The `Deeztracker` subfolder contains all files saved by the app, organized by album or playlist.
+</Tip>

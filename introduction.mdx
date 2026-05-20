@@ -33,7 +33,7 @@ Deeztracker is a desktop music player that connects to Deezer using your persona
 
 ## How it works
 
-Deeztracker authenticates with Deezer through your ARL session token. The Rust backend handles audio decoding and playback via rodio, while the Vue 3 frontend provides the user interface. When a track plays, Deeztracker first checks if it is already downloaded locally — if so, it plays from disk. Otherwise, it streams directly from Deezer.
+Deeztracker authenticates with Deezer through your ARL session token. The Rust backend handles audio decoding and playback via [rodio](https://github.com/RustAudio/rodio), while the Vue 3 frontend provides the user interface. When a track plays, Deeztracker first checks if it is already downloaded locally — if so, it plays from disk. Otherwise, it streams directly from Deezer.
 
 <CardGroup cols={2}>
   <Card title="ARL Token Setup" icon="key" href="/configuration/arl-token">
@@ -42,7 +42,7 @@ Deeztracker authenticates with Deezer through your ARL session token. The Rust b
   <Card title="Audio Quality" icon="sliders" href="/configuration/audio-quality">
     Choose between MP3 128, MP3 320, and FLAC quality tiers
   </Card>
-  <Card title="Library Management" icon="book" href="/features/library">
+  <Card title="Library Management" icon="library" href="/features/library">
     Organize favorites, playlists, and downloaded tracks
   </Card>
   <Card title="Development Setup" icon="code" href="/development/setup">

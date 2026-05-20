@@ -1,0 +1,35 @@
+---
+title: "Smart Radio: artist-seeded continuous playback"
+description: "Generate a continuous queue of related tracks seeded from any artist or track using Deezer's radio API, related artists, and top-track mixing."
+---
+
+Smart Radio uses Deezer's track radio and artist radio APIs to build a continuous queue of related tracks seeded from the artist of any track you choose. Instead of manually curating a queue, you can start a radio session and let Deeztracker keep the music going with tracks that fit the same style.
+
+## How to start a radio session
+
+You can start Smart Radio from any track in the app — search results, album detail, artist detail, or your library. Open the context menu on a track and choose **Start Radio**. Deeztracker takes the track's primary artist and seeds the radio from there.
+
+## How it works
+
+When you start a radio session, the backend runs `get_track_radio` with the selected track's Deezer ID. The process works in layers to ensure you always get a full queue:
+
+<Steps>
+  <Step title="Resolve the primary artist">
+    Deeztracker fetches the track metadata to identify its primary artist ID.
+  </Step>
+  <Step title="Request the artist radio">
+    The backend calls Deezer's artist radio endpoint, which returns up to 40 tracks curated around that artist. If this returns a non-empty list, those tracks are used directly as the radio queue.
+  </Step>
+  <Step title="Fall back to related artists">
+    If the artist radio returns no results, Deeztracker fetches up to five related artists and collects up to 10 top tracks from each. The resulting pool is shuffled randomly to create a varied listening experience.
+  </Step>
+  <Step title="Fall back to artist top tracks">
+    If no related artists are available, Deeztracker uses the seeding artist's own top 25 tracks as the queue.
+  </Step>
+</Steps>
+
+The resulting list of tracks is loaded into the playback queue. When each track finishes, the queue advances automatically, giving you uninterrupted listening.
+
+<Tip>
+Smart Radio is a great way to explore new music. Starting a radio from a track you like will surface artists you may not have searched for directly — especially when Deezer's related-artist graph mixes in neighbouring acts from the same genre or scene.
+</Tip>

@@ -1,0 +1,100 @@
+{
+  "projectType": "saas",
+  "projectName": "Deeztracker",
+  "projectDescription": "A modern desktop music player for Windows and Linux that streams high-quality Deezer tracks or downloads them for offline listening, built with Rust/Tauri and Vue 3.",
+  "theme": "almond",
+  "primaryColor": "#94cb04",
+  "lightColor": "#545454",
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/arl-token",
+              "configuration/audio-quality",
+              "configuration/settings"
+            ]
+          },
+          {
+            "group": "Features",
+            "pages": [
+              "features/streaming",
+              "features/downloading",
+              "features/library",
+              "features/search",
+              "features/smart-radio"
+            ]
+          },
+          {
+            "group": "Development",
+            "pages": [
+              "development/setup",
+              "development/architecture",
+              "development/building"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "High-quality audio streaming via Deezer (MP3 128, MP3 320, FLAC)",
+    "Track, album, and playlist downloads for offline listening",
+    "Smart radio mode based on artist/track seeds",
+    "Local library management with favorites and custom playlists",
+    "Native OS media controls integration (MPRIS on Linux, Windows media keys)",
+    "System tray with playback controls",
+    "Lyrics display",
+    "Offline mode for local library when unauthenticated",
+    "Internationalization support (English, Spanish)",
+    "Autostart on system login"
+  ],
+  "publicApiSurface": [
+    "login(arl: String) -> bool",
+    "search_tracks(query, limit, index) -> Vec<Track>",
+    "search_albums(query, limit, index) -> Vec<Album>",
+    "search_artists(query, limit, index) -> Vec<Artist>",
+    "search_playlists(query, limit, index) -> Vec<Playlist>",
+    "get_track(id) -> Track",
+    "get_album(id) -> Album",
+    "get_artist(id) -> Artist",
+    "get_playlist(id) -> Playlist",
+    "get_artist_top_tracks(id, limit) -> Vec<Track>",
+    "get_artist_albums(id, limit) -> Vec<Album>",
+    "get_track_radio(id) -> Vec<Track>",
+    "get_charts() -> Charts",
+    "download_track_node(track_id)",
+    "download_album_node(album_id)",
+    "download_playlist_node(playlist_id)",
+    "cancel_all_downloads()",
+    "audio_play_native(track_id, start_sec)",
+    "audio_pause_native()",
+    "audio_resume_native()",
+    "audio_stop_native()",
+    "audio_set_volume_native(volume)",
+    "set_audio_quality(quality: FLAC | MP3_320 | MP3_128)",
+    "toggle_favorite(track_id)",
+    "get_favorites() -> Vec<Track>",
+    "create_playlist(name, description)",
+    "delete_playlist(id)",
+    "get_playlists()",
+    "add_track_to_playlist(playlist_id, track_id)",
+    "remove_track_from_playlist(playlist_id, track_id)",
+    "get_playlist_tracks(playlist_id)",
+    "get_downloads() -> Vec<Track>",
+    "remove_download_record(track_id)",
+    "get_lyrics(track_id)"
+  ]
+}
